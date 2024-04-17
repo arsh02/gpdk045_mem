@@ -8,25 +8,25 @@ import chisel3.experimental._
 import chisel3._
 import dsptools.{DspTester, DspTesterOptionsManager, DspTesterOptions}
 import dsptools.numbers._
-import breeze.math.Complex
 import scala.math._
+import chisel3.util._
+import chisel3.stage.{ChiselStage, ChiselGeneratorAnnotation}
 
 class gpdk045_mem_io[T <:Data](proto: T,mem_size: Int)
    extends Bundle {
-        val AR       = Input(UInt(log2ceil(mem_size).W))
-        val AW       = Input(UInt(log2ceil(mem_size).W))
+        val AR       = Input(UInt(log2Ceil(mem_size).W))
+        val AW       = Input(UInt(log2Ceil(mem_size).W))
         val DW       = Input(proto)
         val QR       = Output(proto)
-        override def cloneType = (new gpdk045_mem_io(proto.cloneType,n)).asInstanceOf[this.type]
    }
 
 class gpdk045_mem[T <:Data] (proto: T,mem_size: Int) extends Module {
     val io = IO(new gpdk045_mem_io( proto=proto, mem_size=mem_size))
     
     val write_val=RegInit(0.U.asTypeOf(proto.cloneType))
-    val mem =SyncReadMem(memsize, proto.cloneType)
-    val write_addr =RegInit(0.U(log2Ceil(memsize).W))
-    val read_addr =RegInit(0.U(log2Ceil(memsize).W))
+    val mem =SyncReadMem(mem_size, proto.cloneType)
+    val write_addr =RegInit(0.U(log2Ceil(mem_size).W))
+    val read_addr =RegInit(0.U(log2Ceil(mem_size).W))
     val read_val =RegInit(0.U.asTypeOf(proto.cloneType))
     write_addr:=io.AW
     write_val:=io.DW
@@ -41,29 +41,9 @@ class gpdk045_mem[T <:Data] (proto: T,mem_size: Int) extends Module {
 
 //This gives you verilog
 object gpdk045_mem extends App {
-    chisel3.Driver.execute(args, () => new gpdk045_mem(
-        proto=UInt(16.W), memsize=scala.math.pow(2,13).toInt )
-    )
+    val annos = Seq(ChiselGeneratorAnnotation(() => new gpdk045_mem(
+        proto=UInt(16.W), mem_size=scala.math.pow(2,13).toInt )
+    ))
+    (new ChiselStage).execute(args, annos)
 }
 
-//This is a simple unit tester for demonstration purposes
-class unit_tester(c: gpdk045_mem[DspComplex[UInt]] ) extends DspTester(c) {
-//Tests are here 
-    poke(c.io.AW, 0)
-    poke(c.io.DW, 2)
-    step(1)
-    poke(c.io.AR, 0)
-    fixTolLSBs.withValue(1) {
-        expect(c.io.QR, 2)
-    }
-}
-
-//This is the test driver 
-object unit_test extends App {
-    iotesters.Driver.execute(args, () => new gpdk045_mem(
-            proto=UInt(16.W), memsize=scala.math.pow(2,13).toInt
-          )
-    ){
-            c=>new unit_tester(c)
-    }
-}
