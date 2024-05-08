@@ -42,7 +42,7 @@ class gpdk045_mem[T <:Data] (proto: T,mem_size: Int) extends Module {
 //This gives you verilog
 object gpdk045_mem extends App {
     val annos = Seq(ChiselGeneratorAnnotation(() => new gpdk045_mem(
-        proto=UInt(16.W), mem_size=scala.math.pow(2,13).toInt )
+        proto=UInt(8.W), mem_size=scala.math.pow(2,12).toInt )
     ))
     (new ChiselStage).execute(args, annos)
 }
