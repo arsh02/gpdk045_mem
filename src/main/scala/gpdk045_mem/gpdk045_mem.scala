@@ -23,20 +23,12 @@ class gpdk045_mem_io[T <:Data](proto: T,mem_size: Int)
 class gpdk045_mem[T <:Data] (proto: T,mem_size: Int) extends Module {
     val io = IO(new gpdk045_mem_io( proto=proto, mem_size=mem_size))
     
-    val write_val=RegInit(0.U.asTypeOf(proto.cloneType))
     val mem =SyncReadMem(mem_size, proto.cloneType)
-    val write_addr =RegInit(0.U(log2Ceil(mem_size).W))
-    val read_addr =RegInit(0.U(log2Ceil(mem_size).W))
-    val read_val =RegInit(0.U.asTypeOf(proto.cloneType))
-    write_addr:=io.AW
-    write_val:=io.DW
-    read_addr:=io.AR
     
-    mem.write(write_addr,write_val)
+    mem.write(io.AW,io.DW)
 
-    read_val:=mem.read(read_addr)
+    io.QR:=mem.read(io.AR)
     
-    io.QR:=read_val
 }
 
 //This gives you verilog
