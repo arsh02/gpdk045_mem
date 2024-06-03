@@ -68,7 +68,7 @@ TOUCH=touch -r
 `for i in ${VPATHDIRS}; do
     echo vpath %.scala \\$\(SCALAPATH\)/$i
 done`
-.PHONY: all help clean remapv \$(MODULES)
+.PHONY: all help clean \$(MODULES)
 
 
 all: \$(TARGETS) \$(TEST_TARGETS)
@@ -105,9 +105,6 @@ clean:
 	rm -f \$(VERILOGPATH)/*.fir
 	rm -rf \$(VERILOGPATH)
 	#rm -rf \$(DEPDIR) 
-
-remapv:
-	sed -i '/reset/d' \$(VERILOGPATH)/\$(MODULES).v
 
 MMOD ?=
 memmap:

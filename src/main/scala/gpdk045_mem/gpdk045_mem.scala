@@ -27,7 +27,7 @@ class gpdk045_mem[T <:Data] (proto: T,mem_size: Int) extends Module {
     
     mem.write(io.AW,io.DW)
 
-    io.QR:=mem.read(io.AR)
+    io.QR:=mem.read(io.AR, (1.U).asBool)
     
 }
 
