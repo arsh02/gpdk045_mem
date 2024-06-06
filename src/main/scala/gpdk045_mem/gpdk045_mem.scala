@@ -14,21 +14,37 @@ import chisel3.stage.{ChiselStage, ChiselGeneratorAnnotation}
 
 class gpdk045_mem_io[T <:Data](proto: T,mem_size: Int)
    extends Bundle {
-        val AR       = Input(UInt(log2Ceil(mem_size).W))
-        val AW       = Input(UInt(log2Ceil(mem_size).W))
-        val DW       = Input(proto)
-        val QR       = Output(proto)
+        val write_en     = Input(Bool())
+        val addr_R       = Input(UInt(log2Ceil(mem_size).W))
+        val addr_W       = Input(UInt(log2Ceil(mem_size).W))
+        val data_W       = Input(proto)
+        val data_R       = Output(proto)
    }
 
 class gpdk045_mem[T <:Data] (proto: T,mem_size: Int) extends Module {
     val io = IO(new gpdk045_mem_io( proto=proto, mem_size=mem_size))
     
-    val mem =SyncReadMem(mem_size, proto.cloneType)
-    
-    mem.write(io.AW,io.DW)
 
-    io.QR:=mem.read(io.AR, (1.U).asBool)
+    val mem       =SyncReadMem(mem_size, proto.cloneType)
     
+    val write_val =RegInit(0.U.asTypeOf(proto.cloneType))
+    val write_addr=RegInit(0.U(log2Ceil(mem_size).W))
+    val read_addr =RegInit(0.U(log2Ceil(mem_size).W))
+    val read_val  =RegInit(0.U.asTypeOf(proto.cloneType))
+    val write_en  =RegInit(0.B)
+    
+    write_addr:=io.addr_W
+    read_addr :=io.addr_R
+    
+    write_en  :=io.write_en
+    write_val :=io.data_W
+   
+    when (write_en){
+      mem.write(write_addr,write_val)
+    }
+
+    read_val  :=mem.read(read_addr)
+    io.data_R :=read_val
 }
 
 //This gives you verilog
